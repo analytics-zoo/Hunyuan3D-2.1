@@ -36,7 +36,7 @@ diffusers_logging.set_verbosity(50)
 
 class Hunyuan3DPaintConfig:
     def __init__(self, max_num_view, resolution):
-        self.device = "cuda"
+        self.device = "xpu"
 
         self.multiview_cfg_path = "cfgs/hunyuan-paint-pbr.yaml"
         self.custom_pipeline = "hunyuanpaintpbr"
@@ -84,7 +84,7 @@ class Hunyuan3DPaintPipeline:
         self.load_models()
 
     def load_models(self):
-        torch.cuda.empty_cache()
+        torch.xpu.empty_cache()
         self.models["super_model"] = imageSuperNet(self.config)
         self.models["multiview_model"] = multiviewDiffusionNet(self.config)
         print("Models Loaded.")
