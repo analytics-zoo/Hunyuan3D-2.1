@@ -17,6 +17,7 @@ import torch
 import copy
 import trimesh
 import numpy as np
+import time
 from PIL import Image
 from typing import List
 from DifferentiableRenderer.MeshRender import MeshRender
@@ -120,6 +121,7 @@ class Hunyuan3DPaintPipeline:
         self.render.load_mesh(mesh=mesh)
 
         ########### View Selection #########
+        start_time = time.perf_counter()
         selected_camera_elevs, selected_camera_azims, selected_view_weights = self.view_processor.bake_view_selection(
             self.config.candidate_camera_elevs,
             self.config.candidate_camera_azims,
@@ -131,8 +133,12 @@ class Hunyuan3DPaintPipeline:
             selected_camera_elevs, selected_camera_azims, use_abs_coor=True
         )
         position_maps = self.view_processor.render_position_multiview(selected_camera_elevs, selected_camera_azims)
+        
+        end_time = time.perf_counter()
+        print("View selection and rendering time: {:.2f} seconds".format(end_time - start_time))
 
         ##########  Style  ###########
+        start_time = time.perf_counter()
         image_caption = "high quality"
         image_style = []
         for image in image_prompt:
@@ -143,8 +149,11 @@ class Hunyuan3DPaintPipeline:
                 image = white_bg
             image_style.append(image)
         image_style = [image.convert("RGB") for image in image_style]
+        end_time = time.perf_counter()
+        print("Image style processing time: {:.2f} seconds".format(end_time - start_time))
 
         ###########  Multiview  ##########
+        start_time = time.perf_counter()
         multiviews_pbr = self.models["multiview_model"](
             image_style,
             normal_maps + position_maps,
@@ -152,7 +161,19 @@ class Hunyuan3DPaintPipeline:
             custom_view_size=self.config.resolution,
             resize_input=True,
         )
+        end_time = time.perf_counter()
+        print("Multiview generation time: {:.2f} seconds".format(end_time - start_time))
+
+        ######### Clean and Move #######
+        start_time = time.perf_counter()
+        del self.models["multiview_model"]
+        torch.xpu.empty_cache()
+        self.models["super_model"].upsampler.model = self.models["super_model"].upsampler.model.to("xpu")
+        end_time = time.perf_counter()
+        print("Model cleanup and transfer time: {:.2f} seconds".format(end_time - start_time))
+
         ###########  Enhance  ##########
+        start_time = time.perf_counter()
         enhance_images = {}
         enhance_images["albedo"] = copy.deepcopy(multiviews_pbr["albedo"])
         enhance_images["mr"] = copy.deepcopy(multiviews_pbr["mr"])
@@ -160,8 +181,11 @@ class Hunyuan3DPaintPipeline:
         for i in range(len(enhance_images["albedo"])):
             enhance_images["albedo"][i] = self.models["super_model"](enhance_images["albedo"][i])
             enhance_images["mr"][i] = self.models["super_model"](enhance_images["mr"][i])
+        end_time = time.perf_counter()
+        print("Image enhancement time: {:.2f} seconds".format(end_time - start_time))
 
         ###########  Bake  ##########
+        start_time = time.perf_counter()
         for i in range(len(enhance_images)):
             enhance_images["albedo"][i] = enhance_images["albedo"][i].resize(
                 (self.config.render_size, self.config.render_size)
@@ -175,8 +199,11 @@ class Hunyuan3DPaintPipeline:
             enhance_images["mr"], selected_camera_elevs, selected_camera_azims, selected_view_weights
         )
         mask_mr_np = (mask_mr.squeeze(-1).cpu().numpy() * 255).astype(np.uint8)
+        end_time = time.perf_counter()
+        print("Texture baking time: {:.2f} seconds".format(end_time - start_time))
 
         ##########  inpaint  ###########
+        start_time = time.perf_counter()
         texture = self.view_processor.texture_inpaint(texture, mask_np)
         self.render.set_texture(texture, force_set=True)
         if "mr" in enhance_images:
@@ -184,6 +211,8 @@ class Hunyuan3DPaintPipeline:
             self.render.set_texture_mr(texture_mr)
 
         self.render.save_mesh(output_mesh_path, downsample=True)
+        end_time = time.perf_counter()
+        print("Mesh saving time: {:.2f} seconds".format(end_time - start_time))
 
         if save_glb:
             convert_obj_to_glb(output_mesh_path, output_mesh_path.replace(".obj", ".glb"))
