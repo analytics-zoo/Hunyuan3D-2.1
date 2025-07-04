@@ -55,7 +55,8 @@ class multiviewDiffusionNet:
         if hasattr(self.pipeline.unet, "use_dino") and self.pipeline.unet.use_dino:
             from hunyuanpaintpbr.unet.modules import Dino_v2
             self.dino_v2 = Dino_v2(config.dino_ckpt_path).to(torch.float16)
-            self.dino_v2 = self.dino_v2.to(self.device)
+            # self.dino_v2 = self.dino_v2.to(self.device)
+            self.dino_v2 = self.dino_v2.to("xpu:1")
 
     def seed_everything(self, seed):
         random.seed(seed)
@@ -98,7 +99,7 @@ class multiviewDiffusionNet:
         kwargs["images_position"] = position_image
 
         if hasattr(self.pipeline.unet, "use_dino") and self.pipeline.unet.use_dino:
-            dino_hidden_states = self.dino_v2(input_images[0])
+            dino_hidden_states = self.dino_v2(input_images[0]).to("xpu:0")
             kwargs["dino_hidden_states"] = dino_hidden_states
 
         sync_condition = None

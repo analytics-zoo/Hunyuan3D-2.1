@@ -82,14 +82,46 @@ class Hunyuan3DPaintPipeline:
             raster_mode=self.config.raster_mode,
         )
         self.view_processor = ViewProcessor(self.config, self.render)
-        self.load_models()
 
-    def load_models(self):
-        torch.xpu.empty_cache()
-        self.models["super_model"] = imageSuperNet(self.config)
-        self.models["multiview_model"] = multiviewDiffusionNet(self.config)
-        print("Models Loaded.")
+    # def load_models(self):
+    #     torch.xpu.empty_cache()
+    #     self.models["super_model"] = imageSuperNet(self.config)
+    #     self.models["multiview_model"] = multiviewDiffusionNet(self.config)
+    #     print("Models Loaded.")
 
+    def load_super_model(self, target_device="xpu"):
+        """Load the image super-resolution model."""
+        if "super_model" not in self.models:
+            torch.xpu.empty_cache()
+            self.models["super_model"] = imageSuperNet(self.config)
+            self.models["super_model"].upsampler.model = self.models["super_model"].upsampler.model.to(target_device)
+            print("Super model loaded.")
+    
+    def load_multiview_model(self, target_device="xpu"):
+        """Load the multiview diffusion model."""
+        if "multiview_model" not in self.models:
+            torch.xpu.empty_cache()
+            if target_device != "xpu":
+                self.config.device = target_device
+            self.models["multiview_model"] = multiviewDiffusionNet(self.config)
+            print(self.models["multiview_model"].pipeline)
+            # self.models["multiview_model"].model = self.models["multiview_model"].model.to("xpu")
+            print("Multiview model loaded.")
+    
+    def unload_super_model(self):
+        """Unload the image super-resolution model."""
+        if "super_model" in self.models:
+            del self.models["super_model"]
+            torch.xpu.empty_cache()
+            print("Super model unloaded.")
+    
+    def unload_multiview_model(self):
+        """Unload the multiview diffusion model."""
+        if "multiview_model" in self.models:
+            del self.models["multiview_model"]
+            torch.xpu.empty_cache()
+            print("Multiview model unloaded.")
+        
     @torch.no_grad()
     def __call__(self, mesh_path=None, image_path=None, output_mesh_path=None, use_remesh=True, save_glb=True):
         """Generate texture for 3D mesh using multiview diffusion"""
@@ -153,6 +185,7 @@ class Hunyuan3DPaintPipeline:
         print("Image style processing time: {:.2f} seconds".format(end_time - start_time))
 
         ###########  Multiview  ##########
+        self.load_multiview_model()
         start_time = time.perf_counter()
         multiviews_pbr = self.models["multiview_model"](
             image_style,
@@ -166,9 +199,8 @@ class Hunyuan3DPaintPipeline:
 
         ######### Clean and Move #######
         start_time = time.perf_counter()
-        del self.models["multiview_model"]
-        torch.xpu.empty_cache()
-        self.models["super_model"].upsampler.model = self.models["super_model"].upsampler.model.to("xpu")
+        self.unload_multiview_model()
+        self.load_super_model(target_device=self.config.device)
         end_time = time.perf_counter()
         print("Model cleanup and transfer time: {:.2f} seconds".format(end_time - start_time))
 
