@@ -40,6 +40,7 @@ class multiviewDiffusionNet:
         )
 
         model_path = os.path.join(model_path, "hunyuan3d-paintpbr-v2-1")
+        # model_path = config.multiview_pretrained_path
         pipeline = DiffusionPipeline.from_pretrained(
             model_path,
             custom_pipeline=custom_pipeline, 
@@ -55,8 +56,7 @@ class multiviewDiffusionNet:
         if hasattr(self.pipeline.unet, "use_dino") and self.pipeline.unet.use_dino:
             from hunyuanpaintpbr.unet.modules import Dino_v2
             self.dino_v2 = Dino_v2(config.dino_ckpt_path).to(torch.float16)
-            # self.dino_v2 = self.dino_v2.to(self.device)
-            self.dino_v2 = self.dino_v2.to("xpu:1")
+            self.dino_v2 = self.dino_v2.to(self.device)
 
     def seed_everything(self, seed):
         random.seed(seed)

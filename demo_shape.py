@@ -20,25 +20,25 @@ def _new_layer_norm_forward(self, hidden_states: torch.Tensor):
         hidden_states.dtype in (torch.float, torch.half) and
         self.weight is not None
     ):
-        try:
-            import xe_addons
-            hidden_size = math.prod(self.normalized_shape)
-            x_2d = hidden_states.reshape(-1, hidden_size).contiguous()
-            output = xe_addons.layer_norm(x_2d, self.weight, self.bias, self.eps)
-            return output.reshape(hidden_states.shape)
+        # try:
+        import bigdl_core
+        hidden_size = math.prod(self.normalized_shape)
+        x_2d = hidden_states.reshape(-1, hidden_size).contiguous()
+        output = bigdl_core.layer_norm(x_2d, self.weight, self.bias, self.eps)
+        return output.reshape(hidden_states.shape)
 
-            # import intel_extension_for_pytorch.ipex.llm.functional as ipex_test
+        # import intel_extension_for_pytorch.ipex.llm.functional as ipex_test
 
-            # hidden_states = ipex_test.fast_layer_norm(
-            #     hidden_states,
-            #     self.normalized_shape,
-            #     self.weight,
-            #     self.bias,
-            #     self.eps,
-            # )
-            return hidden_states
-        except ImportError:
-            return _original_layer_norm_forward(self, hidden_states)
+        # hidden_states = ipex_test.fast_layer_norm(
+        #     hidden_states,
+        #     self.normalized_shape,
+        #     self.weight,
+        #     self.bias,
+        #     self.eps,
+        # )
+        return hidden_states
+        # except ImportError:
+        #     return _original_layer_norm_forward(self, hidden_states)
     else:
         print(hidden_states.dtype)
         return _original_layer_norm_forward(self, hidden_states)

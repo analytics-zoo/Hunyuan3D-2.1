@@ -214,6 +214,7 @@ class Hunyuan3DPaintPipeline:
             enhance_images["albedo"][i] = self.models["super_model"](enhance_images["albedo"][i])
             enhance_images["mr"][i] = self.models["super_model"](enhance_images["mr"][i])
         end_time = time.perf_counter()
+        self.unload_super_model()
         print("Image enhancement time: {:.2f} seconds".format(end_time - start_time))
 
         ###########  Bake  ##########
