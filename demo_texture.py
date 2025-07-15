@@ -12,11 +12,6 @@ import torch.nn.functional as F
 from diffusers.models.attention_processor import AttnProcessor2_0, Attention
 from typing import Callable, List, Optional, Tuple, Union
 
-from xpu_convert import convert_to_xpu
-convert_to_xpu()
-
-from textureGenPipeline import Hunyuan3DPaintPipeline, Hunyuan3DPaintConfig
-
 try:
     from torchvision_fix import apply_fix
     apply_fix()
@@ -24,6 +19,11 @@ except ImportError:
     print("Warning: torchvision_fix module not found, proceeding without compatibility fix")                                      
 except Exception as e:
     print(f"Warning: Failed to apply torchvision fix: {e}")
+
+from xpu_convert import convert_to_xpu
+convert_to_xpu()
+
+from textureGenPipeline import Hunyuan3DPaintPipeline, Hunyuan3DPaintConfig
 
 from torch.profiler import profile, record_function, ProfilerActivity
 activities = [ProfilerActivity.CPU, ProfilerActivity.XPU]
