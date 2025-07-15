@@ -266,7 +266,7 @@ class Diffuser(pl.LightningModule):
                 latents = self.z_scale_factor * latents
                 # print(latents.shape)
 
-                # check vae encode and decode is ok? answer is ok !
+                # check vae encode and decode is ok? answer is ok!
                 # import time
                 # from hy3dshape.pipelines import export_to_trimesh
                 # latents = 1. / self.z_scale_factor * latents
@@ -333,9 +333,6 @@ class Diffuser(pl.LightningModule):
                     image = batch.get("image", None)
                     mask = batch.get('mask', None)
                     
-                    # if not isinstance(image, torch.Tensor): print(image.shape)
-                    # if isinstance(mask, torch.Tensor): print(mask.shape)
-                    
                     outputs = self.pipeline(image=image, 
                                             mask=mask,
                                             generator=generator,
@@ -350,5 +347,6 @@ class Diffuser(pl.LightningModule):
                         f.write(traceback.format_exc())
                         f.write("\n")
                     outputs = [None]
+
         self.cond_stage_model.disable_drop = False
         return [outputs]

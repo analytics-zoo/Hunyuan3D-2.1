@@ -33,7 +33,11 @@
 |--------------------------------------------------|-------------------------------------------------------|---------------------------------------------|---------------------------------------------------|
 | <img src="assets/qrcode/wechat.png"  height=140> | <img src="assets/qrcode/xiaohongshu.png"  height=140> | <img src="assets/qrcode/x.png"  height=140> | <img src="assets/qrcode/discord.png"  height=140> |        
 
-
+## 🤗 Community Contribution Leaderboard
+1. By [@visualbruno](https://github.com/visualbruno)
+  - ComfyUI-Hunyuan3d-2-1: https://github.com/visualbruno/ComfyUI-Hunyuan3d-2-1
+2. By [@VR-Jobs](https://github.com/VR-Jobs)
+  - Hunyuan3d-2-1 Unity Support: https://github.com/VR-Jobs/Hunyuan3D-2.1-Unity-XR-PC-Phone
 
 ## ☯️ **Hunyuan3D 2.1**
 
