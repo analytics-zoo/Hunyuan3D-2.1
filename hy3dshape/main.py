@@ -115,11 +115,11 @@ if __name__ == "__main__":
     
     args = get_args()
     
-    if args.fast:
-        torch.backends.cudnn.allow_tf32 = True
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.set_float32_matmul_precision('medium')
-        torch.utils.data._utils.MP_STATUS_CHECK_INTERVAL = 0.05
+    # if args.fast:
+    #     torch.backends.cudnn.allow_tf32 = True
+    #     torch.backends.cuda.matmul.allow_tf32 = True
+    #     torch.set_float32_matmul_precision('medium')
+    #     torch.utils.data._utils.MP_STATUS_CHECK_INTERVAL = 0.05
 
     # Set random seed
     pl.seed_everything(args.seed, workers=True)

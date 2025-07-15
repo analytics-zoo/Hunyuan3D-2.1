@@ -40,6 +40,7 @@ class multiviewDiffusionNet:
         )
 
         model_path = os.path.join(model_path, "hunyuan3d-paintpbr-v2-1")
+        # model_path = config.multiview_pretrained_path
         pipeline = DiffusionPipeline.from_pretrained(
             model_path,
             custom_pipeline=custom_pipeline, 
@@ -98,7 +99,7 @@ class multiviewDiffusionNet:
         kwargs["images_position"] = position_image
 
         if hasattr(self.pipeline.unet, "use_dino") and self.pipeline.unet.use_dino:
-            dino_hidden_states = self.dino_v2(input_images[0])
+            dino_hidden_states = self.dino_v2(input_images[0]).to("xpu:0")
             kwargs["dino_hidden_states"] = dino_hidden_states
 
         sync_condition = None

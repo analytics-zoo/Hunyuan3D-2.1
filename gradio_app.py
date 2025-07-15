@@ -395,7 +395,7 @@ def generation_all(
                                                          height=HTML_HEIGHT, 
                                                          width=HTML_WIDTH, textured=True)
     if args.low_vram_mode:
-        torch.cuda.empty_cache()
+        torch.xpu.empty_cache()
     return (
         gr.update(value=path),
         gr.update(value=glb_path_textured),
@@ -442,7 +442,7 @@ def shape_generation(
     path = export_mesh(mesh, save_folder, textured=False)
     model_viewer_html = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH)
     if args.low_vram_mode:
-        torch.cuda.empty_cache()
+        torch.xpu.empty_cache()
     return (
         gr.update(value=path),
         model_viewer_html,
@@ -739,7 +739,7 @@ if __name__ == '__main__':
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2.1')
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--host', type=str, default='0.0.0.0')
-    parser.add_argument('--device', type=str, default='cuda')
+    parser.add_argument('--device', type=str, default='xpu')
     parser.add_argument('--mc_algo', type=str, default='mc')
     parser.add_argument('--cache-path', type=str, default='./save_dir')
     parser.add_argument('--enable_t23d', action='store_true')
@@ -860,7 +860,7 @@ if __name__ == '__main__':
     shutil.copytree('./assets/env_maps', os.path.join(static_dir, 'env_maps'), dirs_exist_ok=True)
 
     if args.low_vram_mode:
-        torch.cuda.empty_cache()
+        torch.xpu.empty_cache()
     demo = build_app()
     app = gr.mount_gradio_app(app, demo, path="/")
     uvicorn.run(app, host=args.host, port=args.port)

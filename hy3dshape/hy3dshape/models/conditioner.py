@@ -81,7 +81,7 @@ class ImageEncoder(nn.Module):
 
         self.transform = transforms.Compose(
             [
-                transforms.Resize(image_size, transforms.InterpolationMode.BILINEAR, antialias=True),
+                transforms.Resize(image_size, transforms.InterpolationMode.BILINEAR, antialias=False),
                 transforms.CenterCrop(image_size),
                 transforms.Normalize(
                     mean=self.mean,
