@@ -6,9 +6,6 @@ from PIL import Image
 from hy3dshape.rembg import BackgroundRemover
 from hy3dshape.pipelines import Hunyuan3DDiTFlowMatchingPipeline
 
-from xpu_convert import convert_to_xpu
-convert_to_xpu()
-
 from textureGenPipeline import Hunyuan3DPaintPipeline, Hunyuan3DPaintConfig
 
 try:
@@ -18,6 +15,9 @@ except ImportError:
     print("Warning: torchvision_fix module not found, proceeding without compatibility fix")                                      
 except Exception as e:
     print(f"Warning: Failed to apply torchvision fix: {e}")
+
+from xpu_convert import convert_to_xpu
+convert_to_xpu()
 
 # shape
 model_path = 'tencent/Hunyuan3D-2.1'
