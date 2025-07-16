@@ -27,6 +27,7 @@ def _new_layer_norm_forward(self, hidden_states: torch.Tensor):
         return _original_layer_norm_forward(self, hidden_states)
 
 
+_original_F_sdpa = F.scaled_dot_product_attention
 def chunk_scaled_dot_product_attention(
     query,
     key,
@@ -34,11 +35,17 @@ def chunk_scaled_dot_product_attention(
     attn_mask=None,
     dropout_p=0.0,
     is_causal=False,
-    chunk_size=1024
+    scale=None,
+    chunk_size=1024,
 ):
     if chunk_size is None or query.size(2) <= chunk_size:
-        return F.scaled_dot_product_attention(
-            query, key, value, attn_mask, dropout_p, is_causal
+        return _original_F_sdpa(
+            query, key, value, attn_mask, dropout_p, is_causal, scale=scale
+        )
+
+    if scale is not None:
+        return _original_F_sdpa(
+            query, key, value, attn_mask, dropout_p, is_causal, scale=scale
         )
     
     if is_causal:
@@ -168,7 +175,8 @@ def process_on_xpu(self):
 
 def convert_to_xpu():
     nn.LayerNorm.forward = _new_layer_norm_forward
-    AttnProcessor2_0.__call__ = chunked_diffusers_attention_processor_call
+    # AttnProcessor2_0.__call__ = chunked_diffusers_attention_processor_call
+    F.scaled_dot_product_attention = chunk_scaled_dot_product_attention
     RealESRGANer.process = process_on_xpu
 
     print("Converted to XPU compatible functions.")
